@@ -45,8 +45,10 @@ fn superfocus(c: &mut I3Connection, direction: &str) {
         &tree, &|n: &Node| { return n.focused; }
     ).expect("Can not find focused window. Maybe focused window is floating?");
     let current_tab = get_current_tab(&nodes);
-    let focus_tab_msg = format!("[con_id=\"{}\"] focus", current_tab.id);
-    c.command(&focus_tab_msg).unwrap();
+    if current_tab.id != nodes[0].id {
+        let focus_tab_msg = format!("[con_id=\"{}\"] focus", current_tab.id);
+        c.command(&focus_tab_msg).unwrap();
+    }
     let focus_direction_msg = "focus ".to_string() + direction;
     c.command(&focus_direction_msg).unwrap();
     while focus_child(c) {}
