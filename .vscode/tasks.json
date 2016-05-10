@@ -1,0 +1,16 @@
+{
+  "version": "0.1.0",
+  "command": "cargo",
+  "isShellCommand": true,
+  "echoCommand": true,
+  "tasks": [
+    {
+      "args": [
+        "run"
+      ],
+      "suppressTaskName": true,
+      "taskName": "run program",
+      "isBuildCommand": true
+    }
+  ]
+}
