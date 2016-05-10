@@ -1,0 +1,5 @@
+fn_arg_indent = "Tabbed"
+chain_base_indent = "Tabbed"
+chain_indent = "Tabbed"
+reorder_imports = true
+take_source_hints = false
