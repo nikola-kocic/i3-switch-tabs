@@ -1,3 +1,4 @@
+use std::env;
 extern crate i3ipc;
 use i3ipc::I3Connection;
 use i3ipc::reply::{Node, NodeType};
@@ -52,6 +53,7 @@ fn superfocus(c: &mut I3Connection, direction: &str) {
 }
 
 fn main() {
+    let direction = env::args().nth(1).expect("Missing direction argument");
     let mut connection = I3Connection::connect().unwrap();
-    superfocus(&mut connection, "right");
+    superfocus(&mut connection, &direction);
 }
