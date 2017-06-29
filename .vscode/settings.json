@@ -1,8 +1,9 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-  "editor.renderWhitespace": true,
+  "editor.renderWhitespace": "boundary",
   "editor.tabSize": 4,
-  "editor.wrappingColumn": 80,
+  "editor.wordWrapColumn": 80,
+  "editor.wordWrap": "wordWrapColumn",
   "editor.wrappingIndent": "none",
   "files.trimTrailingWhitespace": true,
   "files.exclude": {
