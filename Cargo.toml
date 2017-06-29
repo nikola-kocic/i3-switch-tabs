@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["Nikola Kocić <nikolakocic@gmail.com>"]
 
 [dependencies]
-i3ipc = "0.4"
+i3ipc = "0.4.2"

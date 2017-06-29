@@ -4,25 +4,30 @@ use i3ipc::I3Connection;
 use i3ipc::reply::{Node, NodeType};
 
 fn get_nodes<'a, F>(tree: &'a Node, condition: &F) -> Option<Vec<&'a Node>>
-    where F: Fn(&Node) -> bool
+where
+    F: Fn(&Node) -> bool,
 {
     for node in &tree.nodes {
         if node.focused {
             let r = vec![node];
             return Some(r);
         }
-        if let Some(mut n) = get_nodes(&node, condition) {
+        if let Some(mut n) = get_nodes(node, condition) {
             n.push(node);
             return Some(n);
         }
     }
-    return None;
+    None
 }
 
 fn get_current_tab<'a>(nodes: &[&'a Node]) -> &'a Node {
-    let i = nodes.iter().position(|&n| {
-        match n.nodetype { NodeType::Con => false, _ => true }
-    }).unwrap();
+    let i = nodes
+        .iter()
+        .position(|&n| match n.nodetype {
+            NodeType::Con => false,
+            _ => true,
+        })
+        .unwrap();
     // i is Workspace
     // i - 1 is "Root container" for workspace tabs
     // i - 2 is current tab
@@ -32,18 +37,18 @@ fn get_current_tab<'a>(nodes: &[&'a Node]) -> &'a Node {
 fn focus_child(c: &mut I3Connection) -> bool {
     let r = c.command("focus child").unwrap();
     for o in r.outcomes {
-        if o.success == false {
+        if !o.success {
             return false;
         }
     }
-    return true;
+    true
 }
 
 fn superfocus(c: &mut I3Connection, direction: &str) {
     let tree = c.get_tree().unwrap();
-    let nodes = get_nodes(
-        &tree, &|n: &Node| { return n.focused; }
-    ).expect("Can not find focused window. Maybe focused window is floating?");
+    let nodes = get_nodes(&tree, &|n: &Node| { n.focused }).expect(
+        "Can not find focused window. Maybe focused window is floating?",
+    );
     let current_tab = get_current_tab(&nodes);
     if current_tab.id != nodes[0].id {
         let focus_tab_msg = format!("[con_id=\"{}\"] focus", current_tab.id);
