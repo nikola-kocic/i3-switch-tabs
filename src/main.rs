@@ -35,7 +35,7 @@ fn get_current_tab<'a>(nodes: &[&'a Node]) -> &'a Node {
 }
 
 fn focus_child(c: &mut I3Connection) -> bool {
-    let r = c.command("focus child").unwrap();
+    let r = c.run_command("focus child").unwrap();
     for o in r.outcomes {
         if !o.success {
             return false;
@@ -52,10 +52,10 @@ fn superfocus(c: &mut I3Connection, direction: &str) {
     let current_tab = get_current_tab(&nodes);
     if current_tab.id != nodes[0].id {
         let focus_tab_msg = format!("[con_id=\"{}\"] focus", current_tab.id);
-        c.command(&focus_tab_msg).unwrap();
+        c.run_command(&focus_tab_msg).unwrap();
     }
     let focus_direction_msg = "focus ".to_string() + direction;
-    c.command(&focus_direction_msg).unwrap();
+    c.run_command(&focus_direction_msg).unwrap();
     while focus_child(c) {}
 }
 
