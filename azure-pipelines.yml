@@ -1,0 +1,10 @@
+jobs:
+  - job: Linux
+    pool:
+      vmImage: 'ubuntu-16.04'
+    steps:
+    - script: |
+        curl https://sh.rustup.rs --silent --show-error --fail | sh -s -- -y
+        source $HOME/.cargo/env
+        cargo build --
+        cargo test -- --test-threads=1
