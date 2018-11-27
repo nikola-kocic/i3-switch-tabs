@@ -1,4 +1,4 @@
-# i3-switch-tabs
+# i3 Switch Tabs
 Switch top-level tabs in i3-wm
 
 # Usage:

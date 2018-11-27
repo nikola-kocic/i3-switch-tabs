@@ -1,4 +1,7 @@
-use std::env;
+#[macro_use]
+extern crate clap;
+use clap::{Arg,App};
+
 extern crate i3ipc;
 use i3ipc::I3Connection;
 use i3ipc::reply::{Node, NodeType};
@@ -60,7 +63,18 @@ fn superfocus(c: &mut I3Connection, direction: &str) {
 }
 
 fn main() {
-    let direction = env::args().nth(1).expect("Missing direction argument");
+    let matches = App::new("i3 Switch Tabs")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(crate_description!())
+        .arg(
+            Arg::with_name("direction")
+                .help("left|right|down|up")
+                .takes_value(false),
+        )
+        .get_matches();
+
+    let direction = matches.value_of("direction").unwrap();
     let mut connection = I3Connection::connect().unwrap();
     superfocus(&mut connection, &direction);
 }

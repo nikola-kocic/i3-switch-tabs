@@ -1,7 +1,9 @@
 [package]
 name = "i3-switch-tabs"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Nikola Kocić <nikolakocic@gmail.com>"]
+description = "Switch top-level tabs in i3-wm"
 
 [dependencies]
-i3ipc = "0.8.4"
+i3ipc = "0.9.0"
+clap = "2.32.0"
