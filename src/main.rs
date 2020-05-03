@@ -30,8 +30,8 @@ fn get_current_tab<'a>(nodes: &[&'a Node]) -> Option<&'a Node> {
         .iter()
         .rev()
         .skip_while(|&&n| n.nodetype != NodeType::Workspace)
-        .skip_while(|&&n| n.layout != NodeLayout::Tabbed)
-        .nth(1);
+        .skip_while(|&&n| n.layout != NodeLayout::Tabbed) // "Root container" for tabs
+        .nth(1); // current tab
 
     tab_node.copied()
 }
