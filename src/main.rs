@@ -3,9 +3,11 @@ extern crate clap;
 use clap::{App, Arg};
 
 extern crate i3ipc;
-use i3ipc::reply::{Node, NodeType};
+use i3ipc::reply::{Node, NodeLayout, NodeType};
 use i3ipc::I3Connection;
 
+// Return the list of nodes related to node fulfilling condition.
+// First element of list is the node fulfilling condition, second is its parent node, etc.
 fn get_nodes<'a, F>(tree: &'a Node, condition: &F) -> Option<Vec<&'a Node>>
 where
     F: Fn(&Node) -> bool,
@@ -23,17 +25,15 @@ where
     None
 }
 
-fn get_current_tab<'a>(nodes: &[&'a Node]) -> &'a Node {
-    let i = nodes
+fn get_current_tab<'a>(nodes: &[&'a Node]) -> Option<&'a Node> {
+    let tab_node = nodes
         .iter()
-        .position(|&n| match n.nodetype {
-            NodeType::Con => false,
-            _ => true,
-        }).unwrap();
-    // i is Workspace
-    // i - 1 is "Root container" for workspace tabs
-    // i - 2 is current tab
-    nodes[i - 2]
+        .rev()
+        .skip_while(|&&n| n.nodetype != NodeType::Workspace)
+        .skip_while(|&&n| n.layout != NodeLayout::Tabbed)
+        .nth(1);
+
+    tab_node.copied()
 }
 
 fn focus_child(c: &mut I3Connection) -> bool {
@@ -50,14 +50,15 @@ fn superfocus(c: &mut I3Connection, direction: &str) {
     let tree = c.get_tree().unwrap();
     let nodes = get_nodes(&tree, &|n: &Node| n.focused)
         .expect("Can not find focused window. Maybe focused window is floating?");
-    let current_tab = get_current_tab(&nodes);
-    if current_tab.id != nodes[0].id {
-        let focus_tab_msg = format!("[con_id=\"{}\"] focus", current_tab.id);
-        c.run_command(&focus_tab_msg).unwrap();
+    if let Some(current_tab) = get_current_tab(&nodes) {
+        if current_tab.id != nodes[0].id {
+            let focus_tab_msg = format!("[con_id=\"{}\"] focus", current_tab.id);
+            c.run_command(&focus_tab_msg).unwrap();
+        }
+        let focus_direction_msg = "focus ".to_string() + direction;
+        c.run_command(&focus_direction_msg).unwrap();
+        while focus_child(c) {}
     }
-    let focus_direction_msg = "focus ".to_string() + direction;
-    c.run_command(&focus_direction_msg).unwrap();
-    while focus_child(c) {}
 }
 
 fn check_i3_version(c: &mut I3Connection) -> bool {
@@ -69,7 +70,7 @@ fn check_i3_version(c: &mut I3Connection) -> bool {
             i3_version.human_readable
         );
     }
-    return valid_version;
+    valid_version
 }
 
 fn real_main() -> i32 {
@@ -82,7 +83,8 @@ fn real_main() -> i32 {
                 .required(true)
                 .help("left|right|down|up")
                 .takes_value(false),
-        ).get_matches();
+        )
+        .get_matches();
 
     let direction = matches.value_of("direction").unwrap();
 
