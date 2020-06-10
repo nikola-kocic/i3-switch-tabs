@@ -13,7 +13,7 @@ where
     F: Fn(&Node) -> bool,
 {
     for node in &tree.nodes {
-        if node.focused {
+        if condition(node) {
             let r = vec![node];
             return Some(r);
         }
@@ -23,6 +23,26 @@ where
         }
     }
     None
+}
+
+fn get_node<'a, F>(tree: &'a Node, condition: &F) -> Option<&'a Node>
+where
+    F: Fn(&Node) -> bool,
+{
+    for node in &tree.nodes {
+        if condition(node) {
+            return Some(node);
+        }
+        if let Some(n) = get_node(node, condition) {
+            return Some(n);
+        }
+    }
+    None
+}
+
+fn get_focused_node_id(c: &mut I3Connection) -> Result<Option<i64>, MessageError> {
+    let tree = c.get_tree()?;
+    Ok(get_node(&tree, &|n: &Node| n.focused).map(|n| n.id))
 }
 
 fn get_current_tab<'a>(nodes: &[&'a Node]) -> Option<&'a Node> {
@@ -37,13 +57,20 @@ fn get_current_tab<'a>(nodes: &[&'a Node]) -> Option<&'a Node> {
 }
 
 fn focus_child(c: &mut I3Connection) -> Result<bool, MessageError> {
-    let r = c.run_command("focus child")?;
-    for o in r.outcomes {
-        if !o.success {
+    let mut focused_node_id = get_focused_node_id(c)?;
+    loop {
+        let r = c.run_command("focus child")?;
+        for o in r.outcomes {
+            if !o.success {
+                return Ok(false);
+            }
+        }
+        let new_focused_node_id = get_focused_node_id(c)?;
+        if new_focused_node_id == focused_node_id {
             return Ok(false);
         }
+        focused_node_id = new_focused_node_id;
     }
-    Ok(true)
 }
 
 fn superfocus(c: &mut I3Connection, direction: &str) -> Result<(), MessageError> {
