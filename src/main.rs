@@ -4,7 +4,7 @@ use clap::{App, Arg};
 
 extern crate i3ipc;
 use i3ipc::reply::{Node, NodeLayout, NodeType};
-use i3ipc::I3Connection;
+use i3ipc::{I3Connection, MessageError};
 
 // Return the list of nodes related to node fulfilling condition.
 // First element of list is the node fulfilling condition, second is its parent node, etc.
@@ -36,41 +36,30 @@ fn get_current_tab<'a>(nodes: &[&'a Node]) -> Option<&'a Node> {
     tab_node.copied()
 }
 
-fn focus_child(c: &mut I3Connection) -> bool {
-    let r = c.run_command("focus child").unwrap();
+fn focus_child(c: &mut I3Connection) -> Result<bool, MessageError> {
+    let r = c.run_command("focus child")?;
     for o in r.outcomes {
         if !o.success {
-            return false;
+            return Ok(false);
         }
     }
-    true
+    Ok(true)
 }
 
-fn superfocus(c: &mut I3Connection, direction: &str) {
-    let tree = c.get_tree().unwrap();
+fn superfocus(c: &mut I3Connection, direction: &str) -> Result<(), MessageError> {
+    let tree = c.get_tree()?;
     let nodes = get_nodes(&tree, &|n: &Node| n.focused)
         .expect("Can not find focused window. Maybe focused window is floating?");
     if let Some(current_tab) = get_current_tab(&nodes) {
         if current_tab.id != nodes[0].id {
             let focus_tab_msg = format!("[con_id=\"{}\"] focus", current_tab.id);
-            c.run_command(&focus_tab_msg).unwrap();
+            c.run_command(&focus_tab_msg)?;
         }
         let focus_direction_msg = "focus ".to_string() + direction;
-        c.run_command(&focus_direction_msg).unwrap();
-        while focus_child(c) {}
+        c.run_command(&focus_direction_msg)?;
+        while focus_child(c)? {}
     }
-}
-
-fn check_i3_version(c: &mut I3Connection) -> bool {
-    let i3_version = c.get_version().unwrap();
-    let valid_version = i3_version.major > 4 || (i3_version.major == 4 && i3_version.minor >= 8);
-    if !valid_version {
-        eprintln!(
-            "Error: Your i3wm version is too old, 4.8 or newer is required. You are running {}",
-            i3_version.human_readable
-        );
-    }
-    valid_version
+    Ok(())
 }
 
 fn real_main() -> i32 {
@@ -88,14 +77,29 @@ fn real_main() -> i32 {
 
     let direction = matches.value_of("direction").unwrap();
 
-    let mut connection = I3Connection::connect().unwrap();
-
-    if !check_i3_version(&mut connection) {
-        return 1;
+    match I3Connection::connect() {
+        Ok(mut connection) => match superfocus(&mut connection, &direction) {
+            Ok(()) => 0,
+            Err(MessageError::JsonCouldntParse(e)) => {
+                eprintln!("Error: {}", e);
+                let i3_version = connection.get_version().unwrap();
+                eprintln!(
+                    "Your WM version might be too old, i3wm 4.8 or newer or \
+                        sway 1.0 or newer is required. You are running version {}",
+                    i3_version.human_readable
+                );
+                1
+            }
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                1
+            }
+        },
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            1
+        }
     }
-
-    superfocus(&mut connection, &direction);
-    0
 }
 
 fn main() {
