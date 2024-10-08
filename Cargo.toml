@@ -1,10 +1,10 @@
 [package]
 name = "i3-switch-tabs"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
-authors = ["Nikola Kocić <nikolakocic@gmail.com>"]
+authors = ["Nikola Kocić <nikola-kocic@users.noreply.github.com>"]
 description = "Switch top-level tabs in i3-wm"
 
 [dependencies]
 i3ipc = "0.10.1"
-clap = {version = "4.5.19", features = ["cargo"]}
+clap = {version = "4.5.19", features = ["derive"]}
