@@ -1,12 +1,12 @@
-name: "Verifications"
+name: "CI workflow"
 
 on:
   push:
   pull_request:
 
 jobs:
-  verifications:
-    name: "Code verifications"
+  ci_workflow:
+    name: "CI workflow"
     runs-on: ubuntu-latest
     env:
       release_archive_name: "i3-switch-tabs-${{ github.ref_type == 'tag' && github.ref_name || github.sha }}-linux-bin-x86_64.tar.gz"
@@ -21,7 +21,13 @@ jobs:
       - run: cargo build --release
       - run: cargo clippy
       - run: tar -czf "$release_archive_name" "target/release/i3-switch-tabs"
-      - name: "Release"
+      - name: "Upload Artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: "$release_archive_name"
+          path: "$release_archive_name"
+          retention-days: 5
+      - name: "Create Release"
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
