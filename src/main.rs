@@ -1,8 +1,7 @@
 #[macro_use]
 extern crate clap;
-use clap::{App, Arg};
+use clap::Arg;
 
-extern crate i3ipc;
 use i3ipc::reply::{Node, NodeLayout, NodeType};
 use i3ipc::I3Connection;
 
@@ -74,19 +73,19 @@ fn check_i3_version(c: &mut I3Connection) -> bool {
 }
 
 fn real_main() -> i32 {
-    let matches = App::new("i3 Switch Tabs")
+    let matches = clap::Command::new("i3 Switch Tabs")
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
         .arg(
-            Arg::with_name("direction")
+            Arg::new("direction")
                 .required(true)
                 .help("left|right|down|up")
-                .takes_value(false),
+                .num_args(0),
         )
         .get_matches();
 
-    let direction = matches.value_of("direction").unwrap();
+    let direction = matches.get_one::<String>("direction").unwrap();
 
     let mut connection = I3Connection::connect().unwrap();
 
@@ -94,7 +93,7 @@ fn real_main() -> i32 {
         return 1;
     }
 
-    superfocus(&mut connection, &direction);
+    superfocus(&mut connection, direction);
     0
 }
 
