@@ -12,7 +12,7 @@ where
     F: Fn(&Node) -> bool,
 {
     for node in &tree.nodes {
-        if node.focused {
+        if condition(node) {
             let r = vec![node];
             return Some(r);
         }
