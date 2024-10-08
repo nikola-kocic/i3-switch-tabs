@@ -1,0 +1,20 @@
+name: "Verifications"
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verifications:
+    name: Code verifications
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          cache: false
+      - uses: actions-rust-lang/rustfmt@v1
+        continue-on-error: true
+      - run: cargo build
+      - run: cargo clippy
