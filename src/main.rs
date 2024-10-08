@@ -65,32 +65,27 @@ fn superfocus(c: &mut I3Connection, direction: &str) {
     }
 }
 
-fn check_i3_version(c: &mut I3Connection) -> bool {
-    let i3_version = c.get_version().unwrap();
-    let valid_version = i3_version.major > 4 || (i3_version.major == 4 && i3_version.minor >= 8);
-    if !valid_version {
-        eprintln!(
+fn check_i3_version(c: &mut I3Connection) -> Result<(), String> {
+    let i3_version = c.get_version().map_err(|e| e.to_string())?;
+    if i3_version.major > 4 || (i3_version.major == 4 && i3_version.minor >= 8) {
+        Ok(())
+    } else {
+        Err(format!(
             "Error: Your i3wm version is too old, 4.8 or newer is required. You are running {}",
             i3_version.human_readable
-        );
+        ))
     }
-    valid_version
 }
 
-fn real_main() -> i32 {
+fn main() -> Result<(), String> {
     let args = Args::parse();
 
-    let mut connection = I3Connection::connect().unwrap();
+    let mut connection = I3Connection::connect().map_err(|e| {
+        format!("Cannot establish connection to i3. Make sure that the i3 window manager is running. Details: {e}")
+    })?;
 
-    if !check_i3_version(&mut connection) {
-        return 1;
-    }
+    check_i3_version(&mut connection)?;
 
     superfocus(&mut connection, &args.direction);
-    0
-}
-
-fn main() {
-    let exit_code = real_main();
-    std::process::exit(exit_code);
+    Ok(())
 }
