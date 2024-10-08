@@ -1,0 +1,11 @@
+name: "Release version"
+description: "Release version"
+runs:
+  using: "composite"
+  steps:
+    - run: cargo build --release
+    - run: tar -czf "i3-switch-tabs-${{ github.ref_name }}-linux-bin-x86_64.tar.gz" "target/release/i3-switch-tabs"
+    - name: "Create Release"
+      uses: softprops/action-gh-release@v2
+      with:
+        files: "i3-switch-tabs-${{ github.ref_name }}-linux-bin-x86_64.tar.gz"
