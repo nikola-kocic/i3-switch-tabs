@@ -1,9 +1,14 @@
-#[macro_use]
-extern crate clap;
-use clap::Arg;
-
+use clap::Parser;
 use i3ipc::reply::{Node, NodeLayout, NodeType};
 use i3ipc::I3Connection;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Direction to switch to
+    #[arg(required = true, value_parser = ["left", "right", "down", "up"])]
+    direction: String,
+}
 
 // Return the list of nodes related to node fulfilling condition.
 // First element of list is the node fulfilling condition, second is its parent node, etc.
@@ -73,19 +78,7 @@ fn check_i3_version(c: &mut I3Connection) -> bool {
 }
 
 fn real_main() -> i32 {
-    let matches = clap::Command::new("i3 Switch Tabs")
-        .version(crate_version!())
-        .author(crate_authors!())
-        .about(crate_description!())
-        .arg(
-            Arg::new("direction")
-                .required(true)
-                .help("left|right|down|up")
-                .num_args(0),
-        )
-        .get_matches();
-
-    let direction = matches.get_one::<String>("direction").unwrap();
+    let args = Args::parse();
 
     let mut connection = I3Connection::connect().unwrap();
 
@@ -93,7 +86,7 @@ fn real_main() -> i32 {
         return 1;
     }
 
-    superfocus(&mut connection, direction);
+    superfocus(&mut connection, &args.direction);
     0
 }
 
