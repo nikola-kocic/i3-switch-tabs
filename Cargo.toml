@@ -7,4 +7,4 @@ description = "Switch top-level tabs in i3-wm"
 
 [dependencies]
 i3ipc = "0.10.1"
-clap = {version = "4.5.19", features = ["derive"]}
+clap = {version = "4.5.20", features = ["derive"]}
